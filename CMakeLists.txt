@@ -15,6 +15,7 @@ FetchContent_MakeAvailable(SDL2)
 add_executable(billiard
     src/main.c
     src/game.c
+    src/ball.c
 )
 
 target_include_directories(billiard PRIVATE src)
