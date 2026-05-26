@@ -1,3 +1,10 @@
+//
+//  main.c
+//
+//
+//  Created by Abdulkhamid Khamidullin on 25.05.2026.
+//
+
 #include "game.h"
 #include <stdio.h>
 

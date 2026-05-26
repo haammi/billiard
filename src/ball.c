@@ -9,6 +9,16 @@
 #include <SDL.h>
 
 void ball_update(Ball *b, float dt) {
+    // friction
+    b->vx *= FRICTION;
+    b->vy *= FRICTION;
+
+    // stops if it's almost stopped.
+    if (b->vx * b->vx + b->vy * b->vy < 0.5f) {
+        b->vx = 0;
+        b->vy = 0;
+    }
+    
     b->x += b->vx * dt;
     b->y += b->vy * dt;
 

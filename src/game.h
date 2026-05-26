@@ -1,3 +1,10 @@
+//
+//  game.h
+//
+//
+//  Created by Abdulkhamid Khamidullin on 25.05.2026.
+//
+
 #pragma once
 
 #include <SDL.h>
@@ -10,7 +17,7 @@ typedef struct {
     SDL_Window *window;
     SDL_Renderer *renderer;
     int running;
-    Ball ball;
+    Ball balls[BALL_COUNT];
 } Game;
 
 int game_init(Game *g);

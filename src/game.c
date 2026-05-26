@@ -1,5 +1,13 @@
+//
+//  game.c
+//
+//
+//  Created by Abdulkhamid Khamidullin on 25.05.2026.
+//
+
 #include "game.h"
 #include <stdio.h>
+#include "physics.h"
 
 int game_init(Game *g) {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -29,14 +37,37 @@ int game_init(Game *g) {
 
     g->running = 1;
     // ball init
-    g->ball.x = WINDOW_WIDTH  / 2.0f;
-    g->ball.y = WINDOW_HEIGHT / 2.0f;
-    g->ball.vx = 200.0f;
-    g->ball.vy = 150.0f;
-    g->ball.radius = 15.0f;
-    g->ball.r = 255;
-    g->ball.g = 220;
-    g->ball.b = 50;
+    int colors[BALL_COUNT][3] = {
+        {255, 220, 50},
+        {255, 80,  80},
+        {80,  120, 255},
+        {80,  220, 120},
+        {220, 80,  220},
+    };
+    // Triangle as in billiards
+    float start_x = 800.0f;
+    float start_y = WINDOW_HEIGHT / 2.0f;
+    float spacing = 31.0f;
+    
+    
+    float positions[5][2] = {
+        {start_x,              start_y},
+        {start_x + spacing,    start_y - spacing * 0.5f},
+        {start_x + spacing,    start_y + spacing * 0.5f},
+        {start_x + spacing*2,  start_y - spacing},
+        {start_x + spacing*2,  start_y},
+    };
+
+    for (int i = 0; i < BALL_COUNT; i++) {
+        g->balls[i].x      = positions[i][0];
+        g->balls[i].y      = positions[i][1];
+        g->balls[i].vx     = 0.0f;
+        g->balls[i].vy     = 0.0f;
+        g->balls[i].radius = 15.0f;
+        g->balls[i].r      = colors[i][0];
+        g->balls[i].g      = colors[i][1];
+        g->balls[i].b      = colors[i][2];
+    }
     
     return 1;
 }
@@ -56,13 +87,18 @@ void game_run(Game *g) {
             if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE)
                 g->running = 0;
         }
-        ball_update(&g->ball, dt);
+        for (int i = 0; i < BALL_COUNT; i++) {
+            ball_update(&g->balls[i], dt);
+        }
+        check_collisions(g->balls, BALL_COUNT);
         
         // Rendering
         SDL_SetRenderDrawColor(g->renderer, 20, 80, 40, 255);
         SDL_RenderClear(g->renderer);
         
-        ball_draw(&g->ball, g->renderer);
+        for (int i = 0; i < BALL_COUNT; i++) {
+            ball_draw(&g->balls[i], g->renderer);
+        }
 
         SDL_RenderPresent(g->renderer);
     }

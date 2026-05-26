@@ -13,6 +13,9 @@
 #define WINDOW_WIDTH  1280
 #define WINDOW_HEIGHT 720
 
+#define BALL_COUNT    5
+#define FRICTION      0.98f   // speed multiplier every frame
+
 typedef struct {
     float x, y;   // position
     float vx, vy; // velocity

@@ -16,10 +16,11 @@ add_executable(billiard
     src/main.c
     src/game.c
     src/ball.c
+    src/physics.c
 )
 
 target_include_directories(billiard PRIVATE src)
-target_link_libraries(billiard PRIVATE SDL2::SDL2 SDL2::SDL2main)
+target_link_libraries(billiard PRIVATE SDL2::SDL2 SDL2::SDL2main m)
 
 # Копируем SDL2.dll на Windows
 if(WIN32)
