@@ -9,6 +9,8 @@
 #include <SDL.h>
 
 void ball_update(Ball *b, float dt) {
+    if (!b->active) return;
+    
     // friction
     b->vx *= FRICTION;
     b->vy *= FRICTION;
@@ -23,26 +25,27 @@ void ball_update(Ball *b, float dt) {
     b->y += b->vy * dt;
 
     // Bouncing off walls
-    if (b->x - b->radius < 0) {
-        b->x = b->radius;
+    if (b->x - b->radius < TABLE_X) {
+        b->x = TABLE_X + b->radius;
         b->vx = -b->vx;
     }
-    if (b->x + b->radius > WINDOW_WIDTH) {
-        b->x = WINDOW_WIDTH - b->radius;
+    if (b->x + b->radius > TABLE_X + TABLE_W) {
+        b->x = TABLE_X + TABLE_W - b->radius;
         b->vx = -b->vx;
     }
-    if (b->y - b->radius < 0) {
-        b->y = b->radius;
+    if (b->y - b->radius < TABLE_Y) {
+        b->y = TABLE_Y + b->radius;
         b->vy = -b->vy;
     }
-    if (b->y + b->radius > WINDOW_HEIGHT) {
-        b->y = WINDOW_HEIGHT - b->radius;
+    if (b->y + b->radius > TABLE_Y + TABLE_H) {
+        b->y = TABLE_Y + TABLE_H - b->radius;
         b->vy = -b->vy;
     }
 }
 
 // Drawing cirle through the dots
 void ball_draw(Ball *b, void *renderer) {
+    if (!b->active) return;
     SDL_Renderer *r = (SDL_Renderer *)renderer;
     SDL_SetRenderDrawColor(r, b->r, b->g, b->b, 255);
 
@@ -52,7 +55,7 @@ void ball_draw(Ball *b, void *renderer) {
 
     for (int w = -rad; w <= rad; w++) {
         for (int h = -rad; h <= rad; h++) {
-            if (w*w + h*h <= rad*rad) {
+            if (w * w + h * h <= rad * rad) {
                 SDL_RenderDrawPoint(r, cx + w, cy + h);
             }
         }

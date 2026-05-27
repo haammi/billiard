@@ -17,6 +17,8 @@ add_executable(billiard
     src/game.c
     src/ball.c
     src/physics.c
+    src/input.c
+    src/table.c
 )
 
 target_include_directories(billiard PRIVATE src)

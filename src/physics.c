@@ -21,6 +21,8 @@ void check_collisions(Ball *balls, int count) {
             float dist = sqrtf(dx*dx + dy*dy);
             float min_dist = a->radius + b->radius;
 
+            if (!a->active || !b->active) continue;
+            
             if (dist < min_dist && dist > 0.0f) {
                 // Normal between balls
                 float nx = dx / dist;

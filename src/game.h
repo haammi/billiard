@@ -9,6 +9,8 @@
 
 #include <SDL.h>
 #include "ball.h"
+#include "input.h"
+#include "table.h"
 
 #define WINDOW_TITLE  "Billiard"
 
@@ -17,9 +19,13 @@ typedef struct {
     SDL_Window *window;
     SDL_Renderer *renderer;
     int running;
+    int fullscreen;
     Ball balls[BALL_COUNT];
+    Input input;
 } Game;
 
 int game_init(Game *g);
 void game_run(Game *g);
 void game_quit(Game *g);
+void game_reset_balls(Game *g);
+

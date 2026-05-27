@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include "table.h"
+
 #define WINDOW_WIDTH  1280
 #define WINDOW_HEIGHT 720
 
@@ -21,6 +23,8 @@ typedef struct {
     float vx, vy; // velocity
     float radius;
     int r, g, b;  // color
+    int is_cue;
+    int active;
 } Ball;
 
 void ball_update(Ball *b, float dt);
