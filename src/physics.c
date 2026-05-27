@@ -8,8 +8,6 @@
 #include "physics.h"
 #include <math.h>
 
-
-
 void check_collisions(Ball *balls, int count) {
     for (int i = 0; i < count; i++) {
         for (int j = i + 1; j < count; j++) {

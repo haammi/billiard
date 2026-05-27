@@ -5,9 +5,6 @@
 //  Created by Abdulkhamid Khamidullin on 26.05.2026.
 //
 
-#ifndef table_h
-#define table_h
-
 #pragma once
 
 #include <SDL.h>
@@ -23,4 +20,4 @@ void table_init(int window_w, int window_h);
 void table_draw(SDL_Renderer *r);
 int table_check_pockets(float x, float y);
 
-#endif /* table_h */
+

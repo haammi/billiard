@@ -5,9 +5,6 @@
 //  Created by Abdulkhamid Khamidullin on 25.05.2026.
 //
 
-#ifndef ball_h
-#define ball_h
-
 #pragma once
 
 #include "table.h"
@@ -30,4 +27,3 @@ typedef struct {
 void ball_update(Ball *b, float dt);
 void ball_draw(Ball *b, void *renderer);
 
-#endif /* ball_h */

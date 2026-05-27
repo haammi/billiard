@@ -12,6 +12,13 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(SDL2)
 
+FetchContent_Declare(
+    SDL2_ttf
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL_ttf.git
+    GIT_TAG release-2.22.0
+)
+FetchContent_MakeAvailable(SDL2_ttf)
+
 add_executable(billiard
     src/main.c
     src/game.c
@@ -19,11 +26,11 @@ add_executable(billiard
     src/physics.c
     src/input.c
     src/table.c
+    src/hud.c
 )
 
 target_include_directories(billiard PRIVATE src)
-target_link_libraries(billiard PRIVATE SDL2::SDL2 SDL2::SDL2main m)
-
+target_link_libraries(billiard PRIVATE SDL2::SDL2 SDL2::SDL2main SDL2_ttf m)
 # Копируем SDL2.dll на Windows
 if(WIN32)
     add_custom_command(TARGET billiard POST_BUILD

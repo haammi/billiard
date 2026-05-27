@@ -11,6 +11,7 @@
 #include "ball.h"
 #include "input.h"
 #include "table.h"
+#include "hud.h"
 
 #define WINDOW_TITLE  "Billiard"
 
@@ -22,6 +23,7 @@ typedef struct {
     int fullscreen;
     Ball balls[BALL_COUNT];
     Input input;
+    Hud hud;
 } Game;
 
 int game_init(Game *g);

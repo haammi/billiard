@@ -42,6 +42,7 @@ int game_init(Game *g) {
    
     table_init(WINDOW_WIDTH, WINDOW_HEIGHT);
     game_reset_balls(g);
+    if (!hud_init(&g->hud)) return 0;
     
     return 1;
 }
@@ -96,9 +97,17 @@ void game_run(Game *g) {
         for (int i = 0; i < BALL_COUNT; i++) {
             if (!g->balls[i].active) continue;
             if (table_check_pockets(g->balls[i].x, g->balls[i].y)) {
-                g->balls[i].active = 0;
-                g->balls[i].vx = 0;
-                g->balls[i].vy = 0;
+                if (g->balls[i].is_cue) {
+                    g->balls[i].x  = TABLE_X + 250.0f;
+                    g->balls[i].y  = TABLE_Y + TABLE_H / 2.0f;
+                    g->balls[i].vx = 0.0f;
+                    g->balls[i].vy = 0.0f;
+                } else {
+                    g->balls[i].active = 0;
+                    g->balls[i].vx     = 0.0f;
+                    g->balls[i].vy     = 0.0f;
+                    hud_add_score(&g->hud, 1);
+                }
             }
         }
         
@@ -114,11 +123,13 @@ void game_run(Game *g) {
 
         input_draw(&g->input, &g->balls[0], g->renderer);
         
+        hud_draw(&g->hud, g->renderer);
         SDL_RenderPresent(g->renderer);
     }
 }
 
 void game_quit(Game *g) {
+    hud_quit(&g->hud);
     if (g->renderer) SDL_DestroyRenderer(g->renderer);
     if (g->window)   SDL_DestroyWindow(g->window);
     SDL_Quit();
