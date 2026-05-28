@@ -8,11 +8,13 @@
 #pragma once
 
 #include "table.h"
+#include "audio.h"
+
 
 #define WINDOW_WIDTH  1280
 #define WINDOW_HEIGHT 720
 
-#define BALL_COUNT    5
+#define BALL_COUNT    16
 #define FRICTION      0.98f   // speed multiplier every frame
 
 typedef struct {
@@ -24,6 +26,6 @@ typedef struct {
     int active;
 } Ball;
 
-void ball_update(Ball *b, float dt);
+void ball_update(Ball *b, float dt, Audio *audio);
 void ball_draw(Ball *b, void *renderer);
 

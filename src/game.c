@@ -41,6 +41,7 @@ int game_init(Game *g) {
     g->running = 1;
    
     table_init(WINDOW_WIDTH, WINDOW_HEIGHT);
+    audio_init(&g->audio);
     game_reset_balls(g);
     if (!hud_init(&g->hud)) return 0;
     
@@ -90,9 +91,9 @@ void game_run(Game *g) {
         input_update(&g->input);
         
         for (int i = 0; i < BALL_COUNT; i++) {
-            ball_update(&g->balls[i], dt);
+            ball_update(&g->balls[i], dt, &g->audio);
         }
-        check_collisions(g->balls, BALL_COUNT);
+        check_collisions(g->balls, BALL_COUNT, &g->audio);
         
         for (int i = 0; i < BALL_COUNT; i++) {
             if (!g->balls[i].active) continue;
@@ -107,6 +108,7 @@ void game_run(Game *g) {
                     g->balls[i].vx     = 0.0f;
                     g->balls[i].vy     = 0.0f;
                     hud_add_score(&g->hud, 1);
+                    audio_play_pocket(&g->audio);
                 }
             }
         }
@@ -130,21 +132,33 @@ void game_run(Game *g) {
 
 void game_quit(Game *g) {
     hud_quit(&g->hud);
+    audio_quit(&g->audio);
     if (g->renderer) SDL_DestroyRenderer(g->renderer);
     if (g->window)   SDL_DestroyWindow(g->window);
     SDL_Quit();
 }
 
 void game_reset_balls(Game *g) {
-    int colors[BALL_COUNT - 1][3] = {
+    int colors[15][3] = {
         {255, 220, 50},
-        {255, 80,  80},
-        {80,  120, 255},
-        {80,  220, 120},
+        {220, 50, 50},
+        {50, 50, 220},
+        {150, 0, 150},
+        {220, 120, 50},
+        {50, 180, 50},
+        {180, 50, 50},
+        {20, 20, 20},
+        {255, 220, 50},
+        {220, 50, 50},
+        {50, 50, 220},
+        {150, 0, 150},
+        {220, 120, 50},
+        {50, 180, 50},
+        {180, 50, 50},
     };
-
-    g->balls[0].x = TABLE_X + 250.0f;
-    g->balls[0].y = TABLE_Y + TABLE_H / 2.0f;
+    // white ball
+    g->balls[0].x = TABLE_X + TABLE_W * 0.25f;
+    g->balls[0].y = TABLE_Y + TABLE_H * 0.5f;
     g->balls[0].vx = 0.0f;
     g->balls[0].vy = 0.0f;
     g->balls[0].radius = 15.0f;
@@ -153,28 +167,28 @@ void game_reset_balls(Game *g) {
     g->balls[0].b = 255;
     g->balls[0].is_cue = 1;
     g->balls[0].active = 1;
+    
+    // 15 balls triangle
+    float cx = TABLE_X + TABLE_W * 0.75f;
+    float cy = TABLE_Y + TABLE_H * 0.5f;
+    float spacing = 32.0f;
+    int idx = 0;
 
-    float start_x = TABLE_X + TABLE_W - 300.0f;
-    float start_y = TABLE_Y + TABLE_H / 2.0f;
-    float spacing = 31.0f;
 
-    float positions[4][2] = {
-        {start_x, start_y},
-        {start_x + spacing, start_y - spacing * 0.5f},
-        {start_x + spacing, start_y + spacing * 0.5f},
-        {start_x + spacing*2, start_y},
-    };
-
-    for (int i = 0; i < BALL_COUNT - 1; i++) {
-        g->balls[i + 1].x = positions[i][0];
-        g->balls[i + 1].y = positions[i][1];
-        g->balls[i + 1].vx = 0.0f;
-        g->balls[i + 1].vy = 0.0f;
-        g->balls[i + 1].radius = 15.0f;
-        g->balls[i + 1].r = colors[i][0];
-        g->balls[i + 1].g = colors[i][1];
-        g->balls[i + 1].b = colors[i][2];
-        g->balls[i + 1].is_cue = 0;
-        g->balls[i + 1].active = 1;
+    for (int row = 0; row < 5; row++) {
+        for (int col = 0; col <= row; col++) {
+            int i = idx + 1; 
+            g->balls[i].x = cx + row * spacing;
+            g->balls[i].y = cy - row * spacing * 0.5f + col * spacing;
+            g->balls[i].vx = 0.0f;
+            g->balls[i].vy = 0.0f;
+            g->balls[i].radius = 15.0f;
+            g->balls[i].r = colors[idx][0];
+            g->balls[i].g = colors[idx][1];
+            g->balls[i].b = colors[idx][2];
+            g->balls[i].is_cue = 0;
+            g->balls[i].active = 1;
+            idx++;
+        }
     }
 }

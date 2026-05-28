@@ -8,7 +8,8 @@
 #pragma once
 
 #include "ball.h"
+#include "audio.h"
 
-void check_collisions(Ball *balls, int count);
+void check_collisions(Ball *balls, int count, Audio *audio);
 
 

@@ -12,6 +12,7 @@
 #include "input.h"
 #include "table.h"
 #include "hud.h"
+#include "audio.h"
 
 #define WINDOW_TITLE  "Billiard"
 
@@ -24,6 +25,7 @@ typedef struct {
     Ball balls[BALL_COUNT];
     Input input;
     Hud hud;
+    Audio audio;
 } Game;
 
 int game_init(Game *g);

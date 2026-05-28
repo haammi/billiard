@@ -50,9 +50,9 @@ void hud_draw(Hud *hud, SDL_Renderer *r) {
 
     // Score
     snprintf(buf, sizeof(buf), "Score: %d", hud->score);
-    draw_text(hud, r, buf, 20, 20, yellow);
+    draw_text(hud, r, buf, 20, 8, yellow);
 
-    draw_text(hud, r, "Hold LMB to aim | F - fullscreen", 20, 56, white);
+    draw_text(hud, r, "Hold LMB to aim | F - fullscreen", 20, 36, white);
 }
 
 void hud_add_score(Hud *hud, int points) {

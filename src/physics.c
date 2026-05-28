@@ -8,7 +8,7 @@
 #include "physics.h"
 #include <math.h>
 
-void check_collisions(Ball *balls, int count) {
+void check_collisions(Ball *balls, int count, Audio *audio) {
     for (int i = 0; i < count; i++) {
         for (int j = i + 1; j < count; j++) {
             Ball *a = &balls[i];
@@ -22,6 +22,7 @@ void check_collisions(Ball *balls, int count) {
             if (!a->active || !b->active) continue;
             
             if (dist < min_dist && dist > 0.0f) {
+                audio_play_hit(audio); 
                 // Normal between balls
                 float nx = dx / dist;
                 float ny = dy / dist;
