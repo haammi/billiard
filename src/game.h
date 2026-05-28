@@ -23,6 +23,8 @@ typedef struct {
     int running;
     int fullscreen;
     int game_over;
+    int current_player;
+    int balls_moving;
     Ball balls[BALL_COUNT];
     Input input;
     Hud hud;

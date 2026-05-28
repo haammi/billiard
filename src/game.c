@@ -40,6 +40,8 @@ int game_init(Game *g) {
 
     g->running = 1;
     g->game_over  = 0;
+    g->current_player = 1;
+    g->balls_moving   = 0;
    
     table_init(WINDOW_WIDTH, WINDOW_HEIGHT);
     audio_init(&g->audio);
@@ -61,8 +63,8 @@ void game_run(Game *g) {
         
         // Event handling
         while (SDL_PollEvent(&e)) {
-            if (!g->game_over)
-            input_handle(&g->input, &g->balls[0], &e);
+            if (!g->game_over && !g->balls_moving)
+                input_handle(&g->input, &g->balls[0], &e);
             
             //restart
             if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_r) {
@@ -101,12 +103,37 @@ void game_run(Game *g) {
         }
         if (!g->game_over) {
             input_update(&g->input);
+            
+
+            if (g->balls[0].vx * g->balls[0].vx +
+                g->balls[0].vy * g->balls[0].vy > 0.1f) {
+                g->balls_moving = 1;
+            }
         
             for (int i = 0; i < BALL_COUNT; i++) {
                 ball_update(&g->balls[i], dt, &g->audio);
             }
             
         check_collisions(g->balls, BALL_COUNT, &g->audio);
+            
+        // check balls movement
+        int any_moving = 0;
+        for (int i = 0; i < BALL_COUNT; i++) {
+            if (!g->balls[i].active) continue;
+            if (g->balls[i].vx * g->balls[i].vx +
+                g->balls[i].vy * g->balls[i].vy > 0.1f) {
+                any_moving = 1;
+                break;
+            }
+        }
+
+        // change of direction when the balls stop
+        if (g->balls_moving && !any_moving) {
+            g->balls_moving   = 0;
+            g->current_player = (g->current_player == 1) ? 2 : 1;
+        }
+
+        if (any_moving) g->balls_moving = 1;
         
         for (int i = 0; i < BALL_COUNT; i++) {
             if (!g->balls[i].active) continue;
@@ -146,7 +173,7 @@ void game_run(Game *g) {
 
         input_draw(&g->input, &g->balls[0], g->renderer);
         
-        hud_draw(&g->hud, g->renderer);
+        hud_draw(&g->hud, g->renderer, g->current_player);
         
         if (g->game_over)
             hud_draw_game_over(&g->hud, g->renderer, g->hud.score);

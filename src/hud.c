@@ -44,16 +44,23 @@ static void draw_text(Hud *hud, SDL_Renderer *r, const char *text,
     SDL_DestroyTexture(tex);
 }
 
-void hud_draw(Hud *hud, SDL_Renderer *r) {
+void hud_draw(Hud *hud, SDL_Renderer *r, int current_player) {
     char buf[64];
     SDL_Color white  = {255, 255, 255, 255};
     SDL_Color yellow = {255, 220, 50,  255};
+    SDL_Color p1     = {100, 180, 255, 255};
+    SDL_Color p2     = {255, 120, 100, 255};
 
     // Score
     snprintf(buf, sizeof(buf), "Score: %d", hud->score);
     draw_text(hud, r, buf, 20, 8, yellow);
 
     draw_text(hud, r, "Hold LMB to aim | F - fullscreen", 20, 36, white);
+    
+    if (current_player == 1)
+        draw_text(hud, r, "Player 1", WINDOW_WIDTH - 150, 8, p1);
+    else
+        draw_text(hud, r, "Player 2", WINDOW_WIDTH - 150, 8, p2);
 }
 
 void hud_add_score(Hud *hud, int points) {

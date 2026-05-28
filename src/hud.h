@@ -16,7 +16,7 @@ typedef struct {
 } Hud;
 
 int  hud_init(Hud *hud);
-void hud_draw(Hud *hud, SDL_Renderer *r);
+void hud_draw(Hud *hud, SDL_Renderer *r, int current_player);
 void hud_add_score(Hud *hud, int points);
 void hud_draw_game_over(Hud *hud, SDL_Renderer *r, int score);
 void hud_quit(Hud *hud);
