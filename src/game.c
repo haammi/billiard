@@ -39,6 +39,7 @@ int game_init(Game *g) {
     }
 
     g->running = 1;
+    g->game_over  = 0;
    
     table_init(WINDOW_WIDTH, WINDOW_HEIGHT);
     audio_init(&g->audio);
@@ -57,13 +58,24 @@ void game_run(Game *g) {
         Uint32 now = SDL_GetTicks();
         float dt = (now - prev) / 1000.0f;
         prev = now;
+        
         // Event handling
         while (SDL_PollEvent(&e)) {
+            if (!g->game_over)
             input_handle(&g->input, &g->balls[0], &e);
             
+            //restart
+            if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_r) {
+                g->game_over = 0;
+                g->hud.score = 0;
+                game_reset_balls(g);
+            }
+            
             if (e.type == SDL_QUIT) g->running = 0;
+            
             if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE)
                 g->running = 0;
+            
     
             // gonna fullscreen when you tapped F
             if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_f) {
@@ -87,12 +99,13 @@ void game_run(Game *g) {
                 game_reset_balls(g);
             }
         }
+        if (!g->game_over) {
+            input_update(&g->input);
         
-        input_update(&g->input);
-        
-        for (int i = 0; i < BALL_COUNT; i++) {
-            ball_update(&g->balls[i], dt, &g->audio);
-        }
+            for (int i = 0; i < BALL_COUNT; i++) {
+                ball_update(&g->balls[i], dt, &g->audio);
+            }
+            
         check_collisions(g->balls, BALL_COUNT, &g->audio);
         
         for (int i = 0; i < BALL_COUNT; i++) {
@@ -113,6 +126,14 @@ void game_run(Game *g) {
             }
         }
         
+        // check end of the game
+        int active_count = 0;
+        for (int i = 1; i < BALL_COUNT; i++) {
+            if (g->balls[i].active) active_count++;
+        }
+        if (active_count == 0) g->game_over = 1;
+}
+        
         // Rendering
         SDL_SetRenderDrawColor(g->renderer, 30, 20, 10, 255);
         SDL_RenderClear(g->renderer);
@@ -126,6 +147,10 @@ void game_run(Game *g) {
         input_draw(&g->input, &g->balls[0], g->renderer);
         
         hud_draw(&g->hud, g->renderer);
+        
+        if (g->game_over)
+            hud_draw_game_over(&g->hud, g->renderer, g->hud.score);
+        
         SDL_RenderPresent(g->renderer);
     }
 }

@@ -22,6 +22,7 @@ typedef struct {
     SDL_Renderer *renderer;
     int running;
     int fullscreen;
+    int game_over;
     Ball balls[BALL_COUNT];
     Input input;
     Hud hud;

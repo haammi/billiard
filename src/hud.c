@@ -5,8 +5,9 @@
 //  Created by Abdulkhamid Khamidullin on 27.05.2026.
 //
 
-#include "hud.h"
 #include <stdio.h>
+#include "hud.h"
+#include "ball.h"
 
 #define FONT_PATH "assets/font.ttf"
 #define FONT_SIZE 28
@@ -57,6 +58,25 @@ void hud_draw(Hud *hud, SDL_Renderer *r) {
 
 void hud_add_score(Hud *hud, int points) {
     hud->score += points;
+}
+
+void hud_draw_game_over(Hud *hud, SDL_Renderer *r, int score) {
+    // Screen dimming effect
+    SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(r, 0, 0, 0, 160);
+    SDL_Rect overlay = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
+    SDL_RenderFillRect(r, &overlay);
+
+    char buf[64];
+    SDL_Color yellow = {255, 220, 50,  255};
+    SDL_Color white  = {255, 255, 255, 255};
+
+    draw_text(hud, r, "YOU WIN!", WINDOW_WIDTH/2 - 80, WINDOW_HEIGHT/2 - 60, yellow);
+
+    snprintf(buf, sizeof(buf), "Score: %d", score);
+    draw_text(hud, r, buf, WINDOW_WIDTH/2 - 50, WINDOW_HEIGHT/2, white);
+
+    draw_text(hud, r, "Press R to restart", WINDOW_WIDTH/2 - 100, WINDOW_HEIGHT/2 + 50, white);
 }
 
 void hud_quit(Hud *hud) {
