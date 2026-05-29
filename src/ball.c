@@ -52,19 +52,59 @@ void ball_update(Ball *b, float dt, Audio *audio) {
 }
 
 // Drawing cirle through the dots
-void ball_draw(Ball *b, void *renderer) {
+void ball_draw(Ball *b, void *renderer, TTF_Font *font) {
     if (!b->active) return;
     SDL_Renderer *r = (SDL_Renderer *)renderer;
-    SDL_SetRenderDrawColor(r, b->r, b->g, b->b, 255);
 
     int cx = (int)b->x;
     int cy = (int)b->y;
     int rad = (int)b->radius;
-
-    for (int w = -rad; w <= rad; w++) {
-        for (int h = -rad; h <= rad; h++) {
-            if (w * w + h * h <= rad * rad) {
+    
+    // shadow
+    SDL_SetRenderDrawColor(r, 0, 0, 0, 80);
+    SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
+    for (int w = -rad; w <= rad; w++)
+        for (int h = -rad; h <= rad; h++)
+            if (w*w + h*h <= rad*rad)
+                SDL_RenderDrawPoint(r, cx + w + 4, cy + h + 4);
+    
+    // ball
+    SDL_SetRenderDrawColor(r, b->r, b->g, b->b, 255);
+    for (int w = -rad; w <= rad; w++)
+        for (int h = -rad; h <= rad; h++)
+            if (w * w + h * h <= rad * rad)
                 SDL_RenderDrawPoint(r, cx + w, cy + h);
+
+   
+    
+    // glare on the balls
+    SDL_SetRenderDrawColor(r, 255, 255, 255, 100);
+    int highlight_r = rad / 3;
+    for (int w = -highlight_r; w <= highlight_r; w++)
+        for (int h = -highlight_r; h <= highlight_r; h++)
+            if (w*w + h*h <= highlight_r * highlight_r)
+                SDL_RenderDrawPoint(r, cx + w - rad/3, cy + h - rad/3);
+    
+    // num on ball
+    if (b->number > 0 && font) {
+        char buf[4];
+        snprintf(buf, sizeof(buf), "%d", b->number);
+
+        SDL_Color text_color = {255, 255, 255, 255};
+        // dark num on light ball
+        if (b->r > 180 && b->g > 180)
+            text_color = (SDL_Color){30, 30, 30, 255};
+
+        SDL_Surface *surf = TTF_RenderText_Blended(font, buf, text_color);
+        if (surf) {
+            SDL_Texture *tex = SDL_CreateTextureFromSurface(r, surf);
+            SDL_FreeSurface(surf);
+            if (tex) {
+                int tw, th;
+                SDL_QueryTexture(tex, NULL, NULL, &tw, &th);
+                SDL_Rect dst = {cx - tw/2, cy - th/2, tw, th};
+                SDL_RenderCopy(r, tex, NULL, &dst);
+                SDL_DestroyTexture(tex);
             }
         }
     }

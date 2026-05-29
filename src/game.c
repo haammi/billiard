@@ -168,7 +168,7 @@ void game_run(Game *g) {
         table_draw(g->renderer);
         
         for (int i = 0; i < BALL_COUNT; i++) {
-            ball_draw(&g->balls[i], g->renderer);
+            ball_draw(&g->balls[i], g->renderer, g->hud.font);
         }
 
         input_draw(&g->input, &g->balls[0], g->renderer);
@@ -219,6 +219,7 @@ void game_reset_balls(Game *g) {
     g->balls[0].b = 255;
     g->balls[0].is_cue = 1;
     g->balls[0].active = 1;
+    g->balls[0].number = 0;
     
     // 15 balls triangle
     float cx = TABLE_X + TABLE_W * 0.75f;
@@ -241,6 +242,7 @@ void game_reset_balls(Game *g) {
             g->balls[i].is_cue = 0;
             g->balls[i].active = 1;
             idx++;
+            g->balls[i].number = idx;
         }
     }
 }

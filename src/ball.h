@@ -9,6 +9,7 @@
 
 #include "table.h"
 #include "audio.h"
+#include <SDL_ttf.h>
 
 
 #define WINDOW_WIDTH  1280
@@ -24,8 +25,9 @@ typedef struct {
     int r, g, b;  // color
     int is_cue;
     int active;
+    int number;
 } Ball;
 
 void ball_update(Ball *b, float dt, Audio *audio);
-void ball_draw(Ball *b, void *renderer);
+void ball_draw(Ball *b, void *renderer, TTF_Font *font);
 
