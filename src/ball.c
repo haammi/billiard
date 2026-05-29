@@ -25,22 +25,26 @@ void ball_update(Ball *b, float dt, Audio *audio) {
     b->y += b->vy * dt;
 
     // Bouncing off walls
-    if (b->x - b->radius < TABLE_X) {
+    if (b->x - b->radius < TABLE_X &&
+        !table_check_pockets(b->x, b->y)) {
         b->x = TABLE_X + b->radius;
         b->vx = -b->vx;
         audio_play_wall(audio);
     }
-    if (b->x + b->radius > TABLE_X + TABLE_W) {
+    if (b->x + b->radius > TABLE_X + TABLE_W &&
+        !table_check_pockets(b->x, b->y)) {
         b->x = TABLE_X + TABLE_W - b->radius;
         b->vx = -b->vx;
         audio_play_wall(audio);
     }
-    if (b->y - b->radius < TABLE_Y) {
+    if (b->y - b->radius < TABLE_Y &&
+        !table_check_pockets(b->x, b->y)) {
         b->y = TABLE_Y + b->radius;
         b->vy = -b->vy;
         audio_play_wall(audio);
     }
-    if (b->y + b->radius > TABLE_Y + TABLE_H) {
+    if (b->y + b->radius > TABLE_Y + TABLE_H &&
+        !table_check_pockets(b->x, b->y)) {
         b->y = TABLE_Y + TABLE_H - b->radius;
         b->vy = -b->vy;
         audio_play_wall(audio);

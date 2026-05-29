@@ -14,7 +14,7 @@ extern int TABLE_Y;
 extern int TABLE_W;
 extern int TABLE_H;
 
-#define POCKET_RADIUS 20
+#define POCKET_RADIUS 25
 
 void table_init(int window_w, int window_h);
 void table_draw(SDL_Renderer *r);
