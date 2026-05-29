@@ -46,21 +46,44 @@ static void draw_text(Hud *hud, SDL_Renderer *r, const char *text,
 
 void hud_draw(Hud *hud, SDL_Renderer *r, int current_player) {
     char buf[64];
+    
+    // top panel background
+    SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(r, 0, 0, 0, 140);
+    SDL_Rect panel = {0, 0, WINDOW_WIDTH, 50};
+    SDL_RenderFillRect(r, &panel);
+    
     SDL_Color white  = {255, 255, 255, 255};
     SDL_Color yellow = {255, 220, 50,  255};
     SDL_Color p1     = {100, 180, 255, 255};
     SDL_Color p2     = {255, 120, 100, 255};
 
     // Score
+    SDL_SetRenderDrawColor(r, 180, 140, 20, 200);
+    SDL_Rect score_bg = {10, 8, 130, 34};
+    SDL_RenderFillRect(r, &score_bg);
+    
     snprintf(buf, sizeof(buf), "Score: %d", hud->score);
-    draw_text(hud, r, buf, 20, 8, yellow);
+    draw_text(hud, r, buf, 18, 12, white);
+    
+    // help message
+    SDL_SetRenderDrawColor(r, 0, 0, 0, 100);
+    SDL_Rect hint_bg = {0, WINDOW_HEIGHT - 30, WINDOW_WIDTH, 30};
+    SDL_RenderFillRect(r, &hint_bg);
 
-    draw_text(hud, r, "Hold LMB to aim | F - fullscreen", 20, 36, white);
+    SDL_Color gray = {180, 180, 180, 255};
+    draw_text(hud, r, "Hold LMB to aim | F - fullscreen |  R - restart", WINDOW_WIDTH/2 - 200, WINDOW_HEIGHT - 24, gray);
+
+    // player hud
+    SDL_Color pc = (current_player == 1) ? p1 : p2;
+    SDL_Rect player_bg = {WINDOW_WIDTH - 140, 8, 130, 34};
+    SDL_SetRenderDrawColor(r, 30, 30, 80, 200);
+    SDL_RenderFillRect(r, &player_bg);
     
     if (current_player == 1)
-        draw_text(hud, r, "Player 1", WINDOW_WIDTH - 150, 8, p1);
+        draw_text(hud, r, "Player 1", WINDOW_WIDTH - 125, 12, p1);
     else
-        draw_text(hud, r, "Player 2", WINDOW_WIDTH - 150, 8, p2);
+        draw_text(hud, r, "Player 2", WINDOW_WIDTH - 125, 12, p2);
 }
 
 void hud_add_score(Hud *hud, int points) {
