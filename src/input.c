@@ -16,18 +16,45 @@ void input_handle(Input *inp, Ball *cue_ball, SDL_Event *e) {
     if (e->type == SDL_MOUSEMOTION) {
         inp->mouse_x = (float)e->motion.x;
         inp->mouse_y = (float)e->motion.y;
+        
+        if (!inp->aiming) {
+            // follow mouse for aiming direction
+            inp->locked_x = inp->mouse_x;
+            inp->locked_y = inp->mouse_y;
+        } else {
+            // Calculate power from pull distance
+            float ax = cue_ball->x - inp->aim_x;
+            float ay = cue_ball->y - inp->aim_y;
+            float alen = sqrtf(ax * ax + ay * ay);
+            
+            if (alen > 0) {
+                float mx = inp->mouse_x - inp->aim_x;
+                float my = inp->mouse_y - inp->aim_y;
+                float proj = (mx * ax + my * ay) / alen;
+                
+                // power increases when pulling back, resets when pushing forward
+                if (proj > 0) {
+                    inp->power = proj / 150.0f;
+                    if (inp->power > 1.0f) inp->power = 1.0f;
+                } else {
+                    inp->power = 0.0f;
+                }
+            }
+        }
     }
     
     if (e->type == SDL_MOUSEBUTTONDOWN && e->button.button == SDL_BUTTON_LEFT) {
         inp->aiming = 1;
         inp->power  = 0.0f;
+        inp->aim_x  = (float)e->button.x;
+        inp->aim_y  = (float)e->button.y;
     }
     if (e->type == SDL_MOUSEBUTTONUP && e->button.button == SDL_BUTTON_LEFT) {
-        if (inp->aiming) {
+        if (inp->aiming && inp->power > 0.05f) {
             // Direction from mouse to ball
-            float dx = cue_ball->x - inp->mouse_x;
-            float dy = cue_ball->y - inp->mouse_y;
-            float dist = sqrtf(dx*dx + dy*dy);
+            float dx = inp->locked_x - cue_ball->x;
+            float dy = inp->locked_y - cue_ball->y;
+            float dist = sqrtf(dx * dx + dy * dy);
             if (dist > 0.0f) {
                 cue_ball->vx = (dx / dist) * MAX_POWER * inp->power;
                 cue_ball->vy = (dy / dist) * MAX_POWER * inp->power;
@@ -38,19 +65,11 @@ void input_handle(Input *inp, Ball *cue_ball, SDL_Event *e) {
     }
 }
 
-void input_update(Input *inp) {
-    if (inp->aiming) {
-        inp->power += POWER_SPEED * 0.016f;  // ~60fps
-        if (inp->power > 1.0f) inp->power = 1.0f;
-    }
-}
-
-void input_draw(Input *inp, Ball *cue_ball, SDL_Renderer *r, Ball *balls, int ball_count) {
-    if (!inp->aiming) return;
-    
+void input_draw(Input *inp, Ball *cue_ball, SDL_Renderer *r, Ball *balls, int ball_count, int balls_moving) {
+    if (balls_moving) return;
     // Aiming line
-    float dx = cue_ball->x - inp->mouse_x;
-    float dy = cue_ball->y - inp->mouse_y;
+    float dx = inp->locked_x - cue_ball->x;
+    float dy = inp->locked_y - cue_ball->y;
     float dist = sqrtf(dx * dx + dy * dy);
     
     if (dist < 1.0f) return;
@@ -124,11 +143,11 @@ void input_draw(Input *inp, Ball *cue_ball, SDL_Renderer *r, Ball *balls, int ba
         SDL_SetRenderDrawColor(r, 255, 200, 50, 150);
         for (float t = grad + 5; t < 200.0f; t += 12.0f) {
             SDL_RenderDrawLine(r,
-                (int)(hit_x + dnx * t),
-                (int)(hit_y + dny * t),
-                (int)(hit_x + dnx * (t + 6.0f)),
-                (int)(hit_y + dny * (t + 6.0f))
-            );
+                               (int)(hit_x + dnx * t),
+                               (int)(hit_y + dny * t),
+                               (int)(hit_x + dnx * (t + 6.0f)),
+                               (int)(hit_y + dny * (t + 6.0f))
+                               );
         }
     }
     
@@ -148,27 +167,29 @@ void input_draw(Input *inp, Ball *cue_ball, SDL_Renderer *r, Ball *balls, int ba
             (int)(cue_ball->x - nx * (cue_start + cue_len)) + ox,
             (int)(cue_ball->y - ny * (cue_start + cue_len)) + oy);
     }
-    // Power bar
-    int bar_w = 200;
-    int bar_h = 18;
-    int bar_x = 20;
-    int bar_y = 62;
-    int fill_w = (int)(bar_w * inp->power);
-    int red = (int)(255 * inp->power);
-    int green = (int)(255 * (1.0f - inp->power));
-    
-    // background
-    SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawColor(r, 0, 0, 0, 160);
-    SDL_Rect bar_bg = {bar_x - 2, bar_y - 2, bar_w + 4, bar_h + 4};
-    SDL_RenderFillRect(r, &bar_bg);
-    
-    // gradient
-    SDL_SetRenderDrawColor(r, red, green, 0, 255);
-    SDL_Rect bar = {bar_x, bar_y, fill_w, bar_h};
-    SDL_RenderFillRect(r, &bar);
-    
-    // outline
-    SDL_SetRenderDrawColor(r, 200, 200, 200, 200);
-    SDL_RenderDrawRect(r, &bar_bg);
+    if (inp->aiming) {
+        // Power bar
+        int bar_w = 200;
+        int bar_h = 18;
+        int bar_x = 20;
+        int bar_y = 62;
+        int fill_w = (int)(bar_w * inp->power);
+        int red = (int)(255 * inp->power);
+        int green = (int)(255 * (1.0f - inp->power));
+        
+        // background
+        SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
+        SDL_SetRenderDrawColor(r, 0, 0, 0, 160);
+        SDL_Rect bar_bg = {bar_x - 2, bar_y - 2, bar_w + 4, bar_h + 4};
+        SDL_RenderFillRect(r, &bar_bg);
+        
+        // gradient
+        SDL_SetRenderDrawColor(r, red, green, 0, 255);
+        SDL_Rect bar = {bar_x, bar_y, fill_w, bar_h};
+        SDL_RenderFillRect(r, &bar);
+        
+        // outline
+        SDL_SetRenderDrawColor(r, 200, 200, 200, 200);
+        SDL_RenderDrawRect(r, &bar_bg);
+    }
 }

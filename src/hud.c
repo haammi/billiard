@@ -10,7 +10,7 @@
 #include "ball.h"
 
 #define FONT_PATH "assets/font.ttf"
-#define FONT_SIZE 20
+#define FONT_SIZE 18
 
 int hud_init(Hud *hud) {
     if (TTF_Init() != 0) {

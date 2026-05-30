@@ -102,9 +102,6 @@ void game_run(Game *g) {
             }
         }
         if (!g->game_over) {
-            input_update(&g->input);
-            
-
             if (g->balls[0].vx * g->balls[0].vx +
                 g->balls[0].vy * g->balls[0].vy > 0.1f) {
                 g->balls_moving = 1;
@@ -171,7 +168,7 @@ void game_run(Game *g) {
             ball_draw(&g->balls[i], g->renderer, g->hud.font);
         }
 
-        input_draw(&g->input, &g->balls[0], g->renderer, g->balls, BALL_COUNT);
+        input_draw(&g->input, &g->balls[0], g->renderer, g->balls, BALL_COUNT, g->balls_moving);
         
         hud_draw(&g->hud, g->renderer, g->current_player);
         
@@ -222,17 +219,17 @@ void game_reset_balls(Game *g) {
     g->balls[0].number = 0;
     
     // 15 balls triangle
-    float cx = TABLE_X + TABLE_W * 0.75f;
+    float cx = TABLE_X + TABLE_W * 0.70f;
     float cy = TABLE_Y + TABLE_H * 0.5f;
-    float spacing = 32.0f;
+    float spacing = 30.5f;
     int idx = 0;
 
 
     for (int row = 0; row < 5; row++) {
         for (int col = 0; col <= row; col++) {
             int i = idx + 1; 
-            g->balls[i].x = cx + row * spacing;
-            g->balls[i].y = cy - row * spacing * 0.5f + col * spacing;
+            g->balls[i].x = cx + row * spacing * 0.866f;
+            g->balls[i].y = cy + (col - row * 0.5f) * spacing;
             g->balls[i].vx = 0.0f;
             g->balls[i].vy = 0.0f;
             g->balls[i].radius = 15.0f;

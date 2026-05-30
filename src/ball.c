@@ -69,11 +69,28 @@ void ball_draw(Ball *b, void *renderer, TTF_Font *font) {
                 SDL_RenderDrawPoint(r, cx + w + 4, cy + h + 4);
     
     // ball
-    SDL_SetRenderDrawColor(r, b->r, b->g, b->b, 255);
+    if (b->number >= 9 && b->number <= 15) {
+    // white base
+    SDL_SetRenderDrawColor(r, 240, 240, 240, 255);
     for (int w = -rad; w <= rad; w++)
         for (int h = -rad; h <= rad; h++)
             if (w * w + h * h <= rad * rad)
                 SDL_RenderDrawPoint(r, cx + w, cy + h);
+        // color stripe
+            SDL_SetRenderDrawColor(r, b->r, b->g, b->b, 255);
+            int stripe = rad / 2;
+            for (int w = -rad; w <= rad; w++)
+                for (int h = -stripe; h <= stripe; h++)
+                    if (w * w + h * h <= rad * rad)
+                        SDL_RenderDrawPoint(r, cx + w, cy + h);
+        } else {
+            // solid ball
+            SDL_SetRenderDrawColor(r, b->r, b->g, b->b, 255);
+            for (int w = -rad; w <= rad; w++)
+                for (int h = -rad; h <= rad; h++)
+                    if (w * w + h * h <= rad  *rad)
+                        SDL_RenderDrawPoint(r, cx + w, cy + h);
+        }
 
    
     
@@ -82,7 +99,7 @@ void ball_draw(Ball *b, void *renderer, TTF_Font *font) {
     int highlight_r = rad / 3;
     for (int w = -highlight_r; w <= highlight_r; w++)
         for (int h = -highlight_r; h <= highlight_r; h++)
-            if (w*w + h*h <= highlight_r * highlight_r)
+            if (w * w + h * h <= highlight_r * highlight_r)
                 SDL_RenderDrawPoint(r, cx + w - rad/3, cy + h - rad/3);
     
     // num on ball
