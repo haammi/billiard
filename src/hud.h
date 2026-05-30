@@ -12,6 +12,7 @@
 
 typedef struct {
     TTF_Font *font;
+    TTF_Font *font_large;
     int score;
 } Hud;
 

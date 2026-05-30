@@ -23,6 +23,12 @@ int hud_init(Hud *hud) {
         printf("Font error: %s\n", TTF_GetError());
         return 0;
     }
+    
+    hud->font_large = TTF_OpenFont(FONT_PATH, 48);
+    if (!hud->font_large) {
+        printf("Font large error: %s\n", TTF_GetError());
+        return 0;
+    }
 
     hud->score = 0;
     return 1;
@@ -40,6 +46,20 @@ static void draw_text(Hud *hud, SDL_Renderer *r, const char *text,
     int w, h;
     SDL_QueryTexture(tex, NULL, NULL, &w, &h);
     SDL_Rect dst = {x, y, w, h};
+    SDL_RenderCopy(r, tex, NULL, &dst);
+    SDL_DestroyTexture(tex);
+}
+
+static void draw_text_centered(Hud *hud, SDL_Renderer *r, const char *text,
+                                int y, SDL_Color color) {
+    SDL_Surface *surf = TTF_RenderText_Blended(hud->font, text, color);
+    if (!surf) return;
+    SDL_Texture *tex = SDL_CreateTextureFromSurface(r, surf);
+    SDL_FreeSurface(surf);
+    if (!tex) return;
+    int tw, th;
+    SDL_QueryTexture(tex, NULL, NULL, &tw, &th);
+    SDL_Rect dst = {WINDOW_WIDTH/2 - tw/2, y, tw, th};
     SDL_RenderCopy(r, tex, NULL, &dst);
     SDL_DestroyTexture(tex);
 }
@@ -72,7 +92,7 @@ void hud_draw(Hud *hud, SDL_Renderer *r, int current_player) {
     SDL_RenderFillRect(r, &hint_bg);
 
     SDL_Color gray = {180, 180, 180, 255};
-    draw_text(hud, r, "Hold LMB to aim | F - fullscreen |  R - restart", WINDOW_WIDTH/2 - 200, WINDOW_HEIGHT - 24, gray);
+    draw_text(hud, r, "Hold LMB and pull back to shoot | F - fullscreen |  R - restart", WINDOW_WIDTH/2 - 200, WINDOW_HEIGHT - 24, gray);
 
     // player hud
     SDL_Color pc = (current_player == 1) ? p1 : p2;
@@ -91,25 +111,54 @@ void hud_add_score(Hud *hud, int points) {
 }
 
 void hud_draw_game_over(Hud *hud, SDL_Renderer *r, int score) {
-    // Screen dimming effect
-    SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawColor(r, 0, 0, 0, 160);
-    SDL_Rect overlay = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
-    SDL_RenderFillRect(r, &overlay);
-
+    
     char buf[64];
     SDL_Color yellow = {255, 220, 50,  255};
     SDL_Color white  = {255, 255, 255, 255};
-
-    draw_text(hud, r, "YOU WIN!", WINDOW_WIDTH/2 - 80, WINDOW_HEIGHT/2 - 60, yellow);
+    SDL_Color gray   = {180, 180, 180, 255};
+    
+    // Screen dimming effect
+    SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(r, 0, 0, 0, 200);
+    SDL_Rect overlay = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
+    SDL_RenderFillRect(r, &overlay);
+    
+    //frame
+    SDL_SetRenderDrawColor(r, 40, 25, 5, 230);
+    SDL_Rect box = {WINDOW_WIDTH/2 - 220, WINDOW_HEIGHT/2 - 120, 440, 240};
+    SDL_RenderFillRect(r, &box);
+    
+    // golden frame
+    SDL_SetRenderDrawColor(r, 180, 140, 20, 255);
+    SDL_RenderDrawRect(r, &box);
+    
+    // inner lining
+    SDL_Rect box2 = {box.x + 3, box.y + 3, box.w - 6, box.h - 6};
+    SDL_SetRenderDrawColor(r, 100, 80, 10, 255);
+    SDL_RenderDrawRect(r, &box2);
+    
+    // YOU WIN! in large font
+    SDL_Surface *surf = TTF_RenderText_Blended(hud->font_large, "YOU WIN!", yellow);
+    if (surf) {
+        SDL_Texture *tex = SDL_CreateTextureFromSurface(r, surf);
+        SDL_FreeSurface(surf);
+        if (tex) {
+            int tw, th;
+            SDL_QueryTexture(tex, NULL, NULL, &tw, &th);
+            SDL_Rect dst = {WINDOW_WIDTH/2 - tw/2, WINDOW_HEIGHT/2 - 90, tw, th};
+            SDL_RenderCopy(r, tex, NULL, &dst);
+            SDL_DestroyTexture(tex);
+        }
+    }
 
     snprintf(buf, sizeof(buf), "Score: %d", score);
-    draw_text(hud, r, buf, WINDOW_WIDTH/2 - 50, WINDOW_HEIGHT/2, white);
+    draw_text_centered(hud, r, buf, WINDOW_HEIGHT/2 - 10, white);
 
-    draw_text(hud, r, "Press R to restart", WINDOW_WIDTH/2 - 100, WINDOW_HEIGHT/2 + 50, white);
+    draw_text_centered(hud, r, "Press R to restart", WINDOW_HEIGHT/2 + 50, gray);
 }
 
 void hud_quit(Hud *hud) {
     if (hud->font) TTF_CloseFont(hud->font);
+    if (hud->font_large) TTF_CloseFont(hud->font_large);
     TTF_Quit();
 }
