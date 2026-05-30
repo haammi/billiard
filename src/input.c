@@ -1,6 +1,6 @@
 //
 //  input.c
-//  
+//
 //
 //  Created by Abdulkhamid Khamidullin on 26.05.2026.
 //
@@ -17,19 +17,17 @@ void input_handle(Input *inp, Ball *cue_ball, SDL_Event *e) {
         inp->mouse_x = (float)e->motion.x;
         inp->mouse_y = (float)e->motion.y;
     }
-
+    
     if (e->type == SDL_MOUSEBUTTONDOWN && e->button.button == SDL_BUTTON_LEFT) {
         inp->aiming = 1;
         inp->power  = 0.0f;
     }
-
     if (e->type == SDL_MOUSEBUTTONUP && e->button.button == SDL_BUTTON_LEFT) {
         if (inp->aiming) {
             // Direction from mouse to ball
             float dx = cue_ball->x - inp->mouse_x;
             float dy = cue_ball->y - inp->mouse_y;
             float dist = sqrtf(dx*dx + dy*dy);
-
             if (dist > 0.0f) {
                 cue_ball->vx = (dx / dist) * MAX_POWER * inp->power;
                 cue_ball->vy = (dy / dist) * MAX_POWER * inp->power;
@@ -47,32 +45,97 @@ void input_update(Input *inp) {
     }
 }
 
-void input_draw(Input *inp, Ball *cue_ball, SDL_Renderer *r) {
+void input_draw(Input *inp, Ball *cue_ball, SDL_Renderer *r, Ball *balls, int ball_count) {
     if (!inp->aiming) return;
-
+    
     // Aiming line
     float dx = cue_ball->x - inp->mouse_x;
     float dy = cue_ball->y - inp->mouse_y;
     float dist = sqrtf(dx * dx + dy * dy);
-
+    
     if (dist < 1.0f) return;
     
     float nx = dx / dist;
     float ny = dy / dist;
-
+    
+    // searching ball on way
+    float hit_x = -1, hit_y = -1;
+    float min_t = 2000.0f;
+    Ball *hit_ball = NULL;
+    
+    for (int i = 0; i < ball_count; i++) {
+        Ball *b = &balls[i];
+        if (!b->active || b->is_cue) continue;
+        
+        float bx = b->x - cue_ball->x;
+        float by = b->y - cue_ball->y;
+        float proj = bx * nx + by * ny;
+        if (proj < 0) continue;
+        
+        float perp = (bx - proj * nx) * (bx - proj * nx) + (by - proj * ny) * (by - proj * ny);
+        float min_dist = (cue_ball->radius + b->radius) * (cue_ball->radius + b->radius);
+        
+        if (perp <= min_dist && proj < min_t) {
+            min_t  = proj - sqrtf(min_dist - perp);
+            hit_x  = cue_ball->x + nx * min_t;
+            hit_y  = cue_ball->y + ny * min_t;
+            hit_ball = b;
+        }
+    }
     // dotted line
-    SDL_SetRenderDrawColor(r, 255, 255, 255, 150);
-    for (float t = cue_ball->radius + 2; t < 300.0f; t += 12.0f) {
+    float line_end = (hit_x >= 0) ? min_t : 2000.0f;
+    for (float t = cue_ball->radius + 5; t < line_end; t += 14.0f) {
+        int alpha = (int)(200.0f * (1.0f - t / 2000.0f));
+        SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
+        SDL_SetRenderDrawColor(r, 255, 255, 200, alpha);
         int x1 = (int)(cue_ball->x + nx * t);
         int y1 = (int)(cue_ball->y + ny * t);
-        int x2 = (int)(cue_ball->x + nx * (t + 6.0f));
-        int y2 = (int)(cue_ball->y + ny * (t + 6.0f));
+        int x2 = (int)(cue_ball->x + nx * (t + 7.0f));
+        int y2 = (int)(cue_ball->y + ny * (t + 7.0f));
         SDL_RenderDrawLine(r, x1, y1, x2, y2);
+        SDL_RenderDrawLine(r, x1+1, y1, x2+1, y2);
     }
+    // ghost ball
+    if (hit_x >= 0) {
+        int grad = (int)cue_ball->radius;
+        SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
+        
+        SDL_SetRenderDrawColor(r, 255, 255, 255, 180);
+        for (int w = -grad; w <= grad; w++)
+            for (int h = -grad; h <= grad; h++) {
+                int d = w * w + h * h;
+                if (d <= grad * grad && d >= (grad-2) * (grad-2))
+                    SDL_RenderDrawPoint(r, (int)hit_x + w, (int)hit_y + h);
+            }
+        
+        SDL_SetRenderDrawColor(r, 255, 255, 255, 50);
+        for (int w = -grad; w <= grad; w++)
+            for (int h = -grad; h <= grad; h++)
+                if (w * w + h * h <= grad * grad)
+                    SDL_RenderDrawPoint(r, (int)hit_x + w, (int)hit_y + h);
+        // the line where the ball will go after strike
+        float dnx = nx, dny = ny;
+        if (hit_ball) {
+            dnx = hit_ball->x - hit_x;
+            dny = hit_ball->y - hit_y;
+            float dlen2 = sqrtf(dnx * dnx + dny * dny);
+            if (dlen2 > 0) { dnx /= dlen2; dny /= dlen2; }
+        }
+        SDL_SetRenderDrawColor(r, 255, 200, 50, 150);
+        for (float t = grad + 5; t < 200.0f; t += 12.0f) {
+            SDL_RenderDrawLine(r,
+                (int)(hit_x + dnx * t),
+                (int)(hit_y + dny * t),
+                (int)(hit_x + dnx * (t + 6.0f)),
+                (int)(hit_y + dny * (t + 6.0f))
+            );
+        }
+    }
+    
     
     // cue
     float cue_start = cue_ball->radius + 10.0f + inp->power * 30.0f;
-    float cue_len   = 200.0f;
+    float cue_len = 200.0f;
     
     SDL_SetRenderDrawColor(r, 180, 120, 40, 255);
     for (int offset = -3; offset <= 3; offset++) {
@@ -85,15 +148,27 @@ void input_draw(Input *inp, Ball *cue_ball, SDL_Renderer *r) {
             (int)(cue_ball->x - nx * (cue_start + cue_len)) + ox,
             (int)(cue_ball->y - ny * (cue_start + cue_len)) + oy);
     }
-
     // Power bar
-    SDL_Rect bar_bg = {20, 62, 200, 16};
-    SDL_SetRenderDrawColor(r, 40, 40, 40, 255);
+    int bar_w = 200;
+    int bar_h = 18;
+    int bar_x = 20;
+    int bar_y = 62;
+    int fill_w = (int)(bar_w * inp->power);
+    int red = (int)(255 * inp->power);
+    int green = (int)(255 * (1.0f - inp->power));
+    
+    // background
+    SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(r, 0, 0, 0, 160);
+    SDL_Rect bar_bg = {bar_x - 2, bar_y - 2, bar_w + 4, bar_h + 4};
     SDL_RenderFillRect(r, &bar_bg);
-
-    SDL_Rect bar = {20, 62, (int)(200 * inp->power), 16};
-    SDL_SetRenderDrawColor(r, 255, 100, 50, 255);
+    
+    // gradient
+    SDL_SetRenderDrawColor(r, red, green, 0, 255);
+    SDL_Rect bar = {bar_x, bar_y, fill_w, bar_h};
     SDL_RenderFillRect(r, &bar);
     
-    SDL_SetRenderDrawColor(r, 255, 255, 255, 255);
+    // outline
+    SDL_SetRenderDrawColor(r, 200, 200, 200, 200);
+    SDL_RenderDrawRect(r, &bar_bg);
 }

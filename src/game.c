@@ -171,7 +171,7 @@ void game_run(Game *g) {
             ball_draw(&g->balls[i], g->renderer, g->hud.font);
         }
 
-        input_draw(&g->input, &g->balls[0], g->renderer);
+        input_draw(&g->input, &g->balls[0], g->renderer, g->balls, BALL_COUNT);
         
         hud_draw(&g->hud, g->renderer, g->current_player);
         

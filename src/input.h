@@ -16,7 +16,7 @@ typedef struct {
 } Input;
 
 void input_handle(Input *inp, Ball *cue_ball, SDL_Event *e);
-void input_draw(Input *inp, Ball *cue_ball, SDL_Renderer *r);
+void input_draw(Input *inp, Ball *cue_ball, SDL_Renderer *r, Ball *balls, int ball_count);
 void input_update(Input *inp);
 
 
