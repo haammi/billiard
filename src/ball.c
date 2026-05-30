@@ -69,30 +69,37 @@ void ball_draw(Ball *b, void *renderer, TTF_Font *font) {
                 SDL_RenderDrawPoint(r, cx + w + 4, cy + h + 4);
     
     // ball
-    if (b->number >= 9 && b->number <= 15) {
-    // white base
-    SDL_SetRenderDrawColor(r, 240, 240, 240, 255);
-    for (int w = -rad; w <= rad; w++)
-        for (int h = -rad; h <= rad; h++)
-            if (w * w + h * h <= rad * rad)
-                SDL_RenderDrawPoint(r, cx + w, cy + h);
-        // color stripe
-            SDL_SetRenderDrawColor(r, b->r, b->g, b->b, 255);
-            int stripe = rad / 2;
-            for (int w = -rad; w <= rad; w++)
-                for (int h = -stripe; h <= stripe; h++)
-                    if (w * w + h * h <= rad * rad)
-                        SDL_RenderDrawPoint(r, cx + w, cy + h);
-        } else {
-            // solid ball
-            SDL_SetRenderDrawColor(r, b->r, b->g, b->b, 255);
-            for (int w = -rad; w <= rad; w++)
-                for (int h = -rad; h <= rad; h++)
-                    if (w * w + h * h <= rad  *rad)
-                        SDL_RenderDrawPoint(r, cx + w, cy + h);
+    SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
+    
+    for (int w = -rad - 1; w <= rad + 1; w++) {
+        for (int h = -rad - 1; h <= rad + 1; h++) {
+            float d = sqrtf((float)(w*w + h*h));
+            
+            if (d > rad + 1.0f) continue;
+            
+            int alpha;
+            if (d <= rad - 1.0f) {
+                alpha = 255;
+            } else {
+                alpha = (int)(255.0f * (rad + 1.0f - d));
+            }
+            // striped balls 9-15
+            if (b->number >= 9 && b->number <= 15) {
+                int stripe = rad / 2;
+                if (h >= -stripe && h <= stripe) {
+                    SDL_SetRenderDrawColor(r, b->r, b->g, b->b, alpha);
+                } else {
+                    SDL_SetRenderDrawColor(r, 240, 240, 240, alpha);
+                }
+            } else {
+                // solid ball
+                SDL_SetRenderDrawColor(r, b->r, b->g, b->b, alpha);
+            }
+            
+            SDL_RenderDrawPoint(r, cx + w, cy + h);
         }
+    }
 
-   
     
     // glare on the balls
     SDL_SetRenderDrawColor(r, 255, 255, 255, 100);

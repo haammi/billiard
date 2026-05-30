@@ -35,6 +35,13 @@ set(SDL2MIXER_WAVPACK OFF CACHE BOOL "" FORCE)
 
 FetchContent_MakeAvailable(SDL2_mixer)
 
+FetchContent_Declare(
+    SDL2_image
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
+    GIT_TAG release-2.8.2
+)
+FetchContent_MakeAvailable(SDL2_image)
+
 add_executable(billiard
     src/main.c
     src/game.c
@@ -47,7 +54,7 @@ add_executable(billiard
 )
 
 target_include_directories(billiard PRIVATE src)
-target_link_libraries(billiard PRIVATE SDL2::SDL2 SDL2::SDL2main SDL2_ttf SDL2_mixer m)
+target_link_libraries(billiard PRIVATE SDL2::SDL2 SDL2::SDL2main SDL2_ttf SDL2_mixer SDL2_image m)
 # Копируем SDL2.dll на Windows
 if(WIN32)
     add_custom_command(TARGET billiard POST_BUILD

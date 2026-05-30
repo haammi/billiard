@@ -25,6 +25,10 @@ typedef struct {
     int game_over;
     int current_player;
     int balls_moving;
+    int score1;
+    int score2;
+    int scored_this_turn;
+    int winner;
     Ball balls[BALL_COUNT];
     Input input;
     Hud hud;

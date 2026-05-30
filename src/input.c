@@ -8,6 +8,7 @@
 #include "input.h"
 #include <SDL.h>
 #include <math.h>
+#include <SDL_image.h>
 
 #define MAX_POWER     1200.0f
 #define POWER_SPEED   1.0f    // force accumulation velocity
@@ -63,6 +64,21 @@ void input_handle(Input *inp, Ball *cue_ball, SDL_Event *e) {
         inp->aiming = 0;
         inp->power  = 0.0f;
     }
+}
+
+void input_load_texture(Input *inp, SDL_Renderer *r) {
+    SDL_Surface *surf = IMG_Load("assets/cue.png");
+    if (!surf) {
+        printf("cue.png error: %s\n", IMG_GetError());
+        inp->cue_texture = NULL;
+        return;
+    }
+    inp->cue_texture = SDL_CreateTextureFromSurface(r, surf);
+    SDL_FreeSurface(surf);
+}
+
+void input_free_texture(Input *inp) {
+    if (inp->cue_texture) SDL_DestroyTexture(inp->cue_texture);
 }
 
 void input_draw(Input *inp, Ball *cue_ball, SDL_Renderer *r, Ball *balls, int ball_count, int balls_moving) {
@@ -143,11 +159,10 @@ void input_draw(Input *inp, Ball *cue_ball, SDL_Renderer *r, Ball *balls, int ba
         SDL_SetRenderDrawColor(r, 255, 200, 50, 150);
         for (float t = grad + 5; t < 200.0f; t += 12.0f) {
             SDL_RenderDrawLine(r,
-                               (int)(hit_x + dnx * t),
-                               (int)(hit_y + dny * t),
-                               (int)(hit_x + dnx * (t + 6.0f)),
-                               (int)(hit_y + dny * (t + 6.0f))
-                               );
+                (int)(hit_x + dnx * t),
+                (int)(hit_y + dny * t),
+                (int)(hit_x + dnx * (t + 6.0f)),
+                (int)(hit_y + dny * (t + 6.0f)));
         }
     }
     
@@ -156,16 +171,33 @@ void input_draw(Input *inp, Ball *cue_ball, SDL_Renderer *r, Ball *balls, int ba
     float cue_start = cue_ball->radius + 10.0f + inp->power * 30.0f;
     float cue_len = 200.0f;
     
-    SDL_SetRenderDrawColor(r, 180, 120, 40, 255);
-    for (int offset = -3; offset <= 3; offset++) {
-        int ox = (int)(ny * offset);
-        int oy = (int)(nx * offset);
+    if (inp->cue_texture) {
+        // rotation angle
+        float angle = atan2f(ny, nx) * 180.0f / 3.14159f;
         
-        SDL_RenderDrawLine(r,
-            (int)(cue_ball->x - nx * cue_start) + ox,
-            (int)(cue_ball->y - ny * cue_start) + oy,
-            (int)(cue_ball->x - nx * (cue_start + cue_len)) + ox,
-            (int)(cue_ball->y - ny * (cue_start + cue_len)) + oy);
+        // cue size
+        int draw_w = 400;
+        int draw_h = 100;
+        
+        int cx = (int)(cue_ball->x - nx * cue_start);
+        int cy = (int)(cue_ball->y - ny * cue_start);
+        
+        SDL_Rect dst = {cx - draw_w, cy - draw_h/2, draw_w, draw_h};
+        SDL_Point pivot = {draw_w, draw_h/2};
+        
+        SDL_RenderCopyEx(r, inp->cue_texture, NULL, &dst, angle, &pivot, SDL_FLIP_NONE);
+    } else {
+        SDL_SetRenderDrawColor(r, 180, 120, 40, 255);
+        for (int offset = -3; offset <= 3; offset++) {
+            int ox = (int)(ny * offset);
+            int oy = (int)(nx * offset);
+            
+            SDL_RenderDrawLine(r,
+                (int)(cue_ball->x - nx * cue_start) + ox,
+                (int)(cue_ball->y - ny * cue_start) + oy,
+                (int)(cue_ball->x - nx * (cue_start + cue_len)) + ox,
+                (int)(cue_ball->y - ny * (cue_start + cue_len)) + oy);
+        }
     }
     if (inp->aiming) {
         // Power bar
