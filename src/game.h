@@ -13,8 +13,13 @@
 #include "table.h"
 #include "hud.h"
 #include "audio.h"
-
+#include "menu.h"
 #define WINDOW_TITLE  "Billiard"
+
+typedef enum {
+    STATE_MENU,
+    STATE_PLAYING
+} GameState;
 
 
 typedef struct {
@@ -33,6 +38,8 @@ typedef struct {
     Input input;
     Hud hud;
     Audio audio;
+    GameState state;
+    Menu menu;
 } Game;
 
 int game_init(Game *g);

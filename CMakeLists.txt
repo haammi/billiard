@@ -51,6 +51,7 @@ add_executable(billiard
     src/table.c
     src/hud.c
     src/audio.c
+    src/menu.c
 )
 
 target_include_directories(billiard PRIVATE src)

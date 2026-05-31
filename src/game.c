@@ -48,6 +48,7 @@ int game_init(Game *g) {
     g->winner = 0;
     g->hud.screen_w = WINDOW_WIDTH;
     g->hud.screen_h = WINDOW_HEIGHT;
+    g->state = STATE_MENU;
     
     
     table_init(WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -71,61 +72,73 @@ void game_run(Game *g) {
         
         // Event handling
         while (SDL_PollEvent(&e)) {
-            if (!g->game_over && !g->balls_moving)
-                input_handle(&g->input, &g->balls[0], &e);
-            
-            //restart
-            if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_r) {
-                g->game_over = 0;
-                g->hud.score = 0;
-                g->score1 = 0;
-                g->score2 = 0;
-                g->current_player = 1;
-                g->scored_this_turn = 0;
-                g->winner = 0;
-                game_reset_balls(g);
-            }
-            
             if (e.type == SDL_QUIT) g->running = 0;
             
-            if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE)
-                g->running = 0;
-            
-    
-            // gonna fullscreen when you tapped F
-            if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_f) {
-                g->fullscreen = !g->fullscreen;
-                SDL_SetWindowFullscreen(g->window, g->fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
+            if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) {
+                if (g->state == STATE_PLAYING)
+                    g->state = STATE_MENU;
+                else
+                    g->running = 0;
             }
-            // gonna fullscreen when u tapped fullscreen button
-            if (e.type == SDL_WINDOWEVENT &&
-                e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-                int w, h;
-                SDL_GetWindowSize(g->window, &w, &h);
-                // save old position values
-                float old_x = TABLE_X;
-                float old_y = TABLE_Y;
-                float old_w = TABLE_W;
-                float old_h = TABLE_H;
+            
+            if (g->state == STATE_MENU) {
+                int start = 0, quit = 0;
+                menu_handle(&g->menu, &e, &start, &quit);
+                if (start) {
+                    g->state = STATE_PLAYING;
+                    game_reset_balls(g);
+                }
+                if (quit) g->running = 0;
+            } else {
+                if (!g->game_over && !g->balls_moving)
+                    input_handle(&g->input, &g->balls[0], &e);
                 
-                // save relative positions
-                float rx[BALL_COUNT], ry[BALL_COUNT];
-                for (int i = 0; i < BALL_COUNT; i++) {
-                    rx[i] = (g->balls[i].x - old_x) / old_w;
-                    ry[i] = (g->balls[i].y - old_y) / old_h;
+                // restart
+                if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_r) {
+                    g->game_over = 0;
+                    g->hud.score = 0;
+                    g->score1 = 0;
+                    g->score2 = 0;
+                    g->current_player = 1;
+                    g->scored_this_turn = 0;
+                    g->winner = 0;
+                    game_reset_balls(g);
                 }
                 
+                // gonna fullscreen when you tapped F
+                if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_f) {
+                    g->fullscreen = !g->fullscreen;
+                    SDL_SetWindowFullscreen(g->window, g->fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
+                }
                 
-                table_init(w, h);
-                g->hud.screen_w = w;
-                g->hud.screen_h = h;
-                
-                // restoring positions
-                for (int i = 0; i < BALL_COUNT; i++) {
-                    g->balls[i].x = TABLE_X + rx[i] * TABLE_W;
-                    g->balls[i].y = TABLE_Y + ry[i] * TABLE_H;
+                // gonna fullscreen when u tapped fullscreen button
+                if (e.type == SDL_WINDOWEVENT &&
+                    e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+                    int w, h;
+                    SDL_GetWindowSize(g->window, &w, &h);
                     
+                    // save old position values
+                    float old_x = TABLE_X;
+                    float old_y = TABLE_Y;
+                    float old_w = TABLE_W;
+                    float old_h = TABLE_H;
                     
+                    // save relative positions
+                    float rx[BALL_COUNT], ry[BALL_COUNT];
+                    for (int i = 0; i < BALL_COUNT; i++) {
+                        rx[i] = (g->balls[i].x - old_x) / old_w;
+                        ry[i] = (g->balls[i].y - old_y) / old_h;
+                    }
+                    
+                    table_init(w, h);
+                    g->hud.screen_w = w;
+                    g->hud.screen_h = h;
+                    
+                    // restoring positions
+                    for (int i = 0; i < BALL_COUNT; i++) {
+                        g->balls[i].x = TABLE_X + rx[i] * TABLE_W;
+                        g->balls[i].y = TABLE_Y + ry[i] * TABLE_H;
+                    }
                 }
             }
         }
@@ -211,21 +224,23 @@ void game_run(Game *g) {
         
         table_draw(g->renderer);
         
-        for (int i = 0; i < BALL_COUNT; i++) {
-            ball_draw(&g->balls[i], g->renderer, g->hud.font);
+        if (g->state == STATE_MENU) {
+            menu_draw(&g->menu, g->renderer, g->hud.font, g->hud.font_large);
+        } else {
+            table_draw(g->renderer);
+            
+            for (int i = 0; i < BALL_COUNT; i++)
+                ball_draw(&g->balls[i], g->renderer, g->hud.font);
+            
+            input_draw(&g->input, &g->balls[0], g->renderer, g->balls, BALL_COUNT, g->balls_moving);
+            hud_draw(&g->hud, g->renderer, g->current_player, g->score1, g->score2);
+            
+            if (g->game_over)
+                hud_draw_game_over(&g->hud, g->renderer, g->score1, g->score2, g->winner);
         }
-        
-        input_draw(&g->input, &g->balls[0], g->renderer, g->balls, BALL_COUNT, g->balls_moving);
-        
-        hud_draw(&g->hud, g->renderer, g->current_player, g->score1, g->score2);
-        
-        if (g->game_over)
-            hud_draw_game_over(&g->hud, g->renderer, g->score1, g->score2, g->winner);
-        
         SDL_RenderPresent(g->renderer);
     }
 }
-
 void game_quit(Game *g) {
     hud_quit(&g->hud);
     audio_quit(&g->audio);
