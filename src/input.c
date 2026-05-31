@@ -9,6 +9,7 @@
 #include <SDL.h>
 #include <math.h>
 #include <SDL_image.h>
+#include <stdio.h>
 
 #define MAX_POWER     1200.0f
 #define POWER_SPEED   1.0f    // force accumulation velocity

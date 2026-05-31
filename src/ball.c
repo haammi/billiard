@@ -6,6 +6,8 @@
 //
 
 #include "ball.h"
+#include <math.h>
+#include <stdio.h>
 #include <SDL.h>
 
 void ball_update(Ball *b, float dt, Audio *audio) {

@@ -28,7 +28,7 @@ if(WIN32)
     find_library(SDL2_IMAGE_LIB SDL2_image PATHS ${SDL2_IMAGE_DIR}/lib NO_DEFAULT_PATH)
     find_library(SDL2_MIXER_LIB SDL2_mixer PATHS ${SDL2_MIXER_DIR}/lib NO_DEFAULT_PATH)
 
-    set(SDL_LIBS ${SDL2MAIN_LIB} ${SDL2_LIB} ${SDL2_TTF_LIB} ${SDL2_IMAGE_LIB} ${SDL2_MIXER_LIB})
+    set(SDL_LIBS ${SDL2_LIB} ${SDL2_TTF_LIB} ${SDL2_IMAGE_LIB} ${SDL2_MIXER_LIB})
 
     file(GLOB ALL_DLLS
         "${SDL2_DIR}/bin/*.dll"
@@ -85,6 +85,10 @@ add_executable(billiard
 
 target_include_directories(billiard PRIVATE src)
 target_link_libraries(billiard PRIVATE ${SDL_LIBS} m)
+
+if(WIN32)
+    target_link_options(billiard PRIVATE -mconsole)
+endif()
 
 if(WIN32)
     add_custom_command(TARGET billiard POST_BUILD
